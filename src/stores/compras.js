@@ -23,7 +23,8 @@ export const useComprasStore = defineStore('compras', () => {
 
   const crearCompra = async (payload) => {
     const auth = useAuthStore()
-    const months = Number(payload.meses)
+    const months = payload.tipo_pago === 'unico' ? 1 : Number(payload.meses)
+    if (!Number.isInteger(months) || months < 1) throw new Error('Indica una cantidad de meses válida.')
     const monthly = Math.round((Number(payload.total) / months + Number.EPSILON) * 100) / 100
     const start = startOfMonth(new Date(`${payload.mes_inicio}-01T00:00:00`))
     const end = addMonths(start, months - 1)

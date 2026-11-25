@@ -10,21 +10,29 @@ import { useComprasStore } from '../stores/compras'
 const router = useRouter()
 const tarjetas = useTarjetasStore()
 const compras = useComprasStore()
-const form = reactive({ que_compre: '', tienda: '', fecha_compra: format(new Date(), 'yyyy-MM-dd'), total: '', tarjeta_id: '', meses: 1, mes_inicio: format(addMonths(new Date(), 1), 'yyyy-MM'), nota: '' })
+const form = reactive({ que_compre: '', tienda: '', fecha_compra: format(new Date(), 'yyyy-MM-dd'), total: '', tarjeta_id: '', tipo_pago: 'unico', meses: 1, mes_inicio: format(addMonths(new Date(), 1), 'yyyy-MM'), nota: '' })
 const error = ref('')
 const money = (value) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value)
-const mensualidad = computed(() => Number(form.total) > 0 ? Number(form.total) / Number(form.meses || 1) : 0)
+const mesesCalculados = computed(() => form.tipo_pago === 'unico' ? 1 : Number(form.meses))
+const mensualidad = computed(() => Number(form.total) > 0 && mesesCalculados.value >= 1 ? Number(form.total) / mesesCalculados.value : 0)
 const rango = computed(() => {
-  if (!form.mes_inicio) return ''
+  if (!form.mes_inicio || mesesCalculados.value < 1) return ''
   const start = new Date(`${form.mes_inicio}-01T00:00:00`)
-  const end = addMonths(start, Number(form.meses || 1) - 1)
+  const end = addMonths(start, mesesCalculados.value - 1)
   return `${format(start, 'MMM yyyy', { locale: es })} a ${format(end, 'MMM yyyy', { locale: es })}`
 })
+function seleccionarTipoPago(tipo) {
+  form.tipo_pago = tipo
+  form.meses = tipo === 'unico' ? 1 : ''
+}
 onMounted(() => tarjetas.cargarTarjetas())
 async function save() {
   error.value = ''
   if (!form.que_compre || Number(form.total) <= 0) { error.value = 'Completa el nombre y un total válido.'; return }
-  if (Number(form.meses) < 1) { error.value = 'Los meses deben ser al menos 1.'; return }
+  if (form.tipo_pago === 'mensual' && (!Number.isInteger(mesesCalculados.value) || mesesCalculados.value < 2)) {
+    error.value = 'Indica cuántos meses son, al menos 2.'
+    return
+  }
   try { await compras.crearCompra(form); router.push('/compras') } catch (e) { error.value = e.message }
 }
 </script>
@@ -40,8 +48,8 @@ async function save() {
         <div><label class="mb-2 block text-sm font-semibold">Fecha de compra</label><input v-model="form.fecha_compra" type="date" class="w-full rounded-xl border border-slate-200 px-4 py-3" /></div>
         <div><label class="mb-2 block text-sm font-semibold">Total *</label><input v-model="form.total" type="number" min="0.01" step="0.01" class="w-full rounded-xl border border-slate-200 px-4 py-3" /></div>
         <div><label class="mb-2 block text-sm font-semibold">Tarjeta</label><select v-model="form.tarjeta_id" class="w-full rounded-xl border border-slate-200 px-4 py-3"><option value="">Sin tarjeta</option><option v-for="tarjeta in tarjetas.tarjetas" :key="tarjeta.id" :value="tarjeta.id">{{ tarjeta.nombre }}</option></select></div>
-        <div><label class="mb-2 block text-sm font-semibold">Tipo de pago</label><div class="flex gap-4 rounded-xl border border-slate-200 px-4 py-3"><label><input type="radio" :value="1" v-model.number="form.meses" /> 1 pago</label><label><input type="radio" :value="12" v-model.number="form.meses" /> A meses</label></div></div>
-        <div v-if="form.meses > 1"><label class="mb-2 block text-sm font-semibold">Meses</label><input v-model.number="form.meses" type="number" min="2" class="w-full rounded-xl border border-slate-200 px-4 py-3" /></div>
+        <div><label class="mb-2 block text-sm font-semibold">Tipo de pago</label><div class="flex gap-4 rounded-xl border border-slate-200 px-4 py-3"><label><input type="radio" value="unico" :checked="form.tipo_pago === 'unico'" @change="seleccionarTipoPago('unico')" /> 1 pago</label><label><input type="radio" value="mensual" :checked="form.tipo_pago === 'mensual'" @change="seleccionarTipoPago('mensual')" /> A meses</label></div></div>
+        <div v-if="form.tipo_pago === 'mensual'"><label class="mb-2 block text-sm font-semibold">Meses</label><input v-model="form.meses" type="number" min="2" step="1" placeholder="Ej. 6" class="w-full rounded-xl border border-slate-200 px-4 py-3" /></div>
         <div><label class="mb-2 block text-sm font-semibold">Mes que empieza</label><input v-model="form.mes_inicio" type="month" class="w-full rounded-xl border border-slate-200 px-4 py-3" /></div>
         <div class="md:col-span-2"><label class="mb-2 block text-sm font-semibold">Nota</label><textarea v-model="form.nota" class="w-full rounded-xl border border-slate-200 px-4 py-3"></textarea></div>
         <div class="md:col-span-2 rounded-xl bg-violet-50 p-4 text-violet-800">Vas a pagar <b>{{ money(mensualidad) }}</b> al mes, de <b>{{ rango }}</b>.</div>
