@@ -26,9 +26,9 @@ async function mark(pago) { await compras.marcarPago(pago, !pago.pagado) }
   <div class="min-h-screen bg-slate-50">
     <AppHeader />
     <main class="mx-auto max-w-6xl px-4 py-7">
-      <div class="mb-6 flex items-end justify-between">
+      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div><p class="text-sm text-violet-700">{{ format(new Date(), 'MMMM yyyy', { locale: es }) }}</p><h1 class="mt-1 text-2xl font-bold">Hola, {{ auth.username }}</h1></div>
-        <RouterLink to="/compras/nueva" class="rounded-xl bg-violet-600 px-4 py-3 font-bold text-white">+ Agregar compra</RouterLink>
+        <RouterLink to="/compras/nueva" class="min-h-11 rounded-xl bg-violet-600 px-4 py-3 text-center font-bold text-white">+ Agregar compra</RouterLink>
       </div>
       <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <ResumenCard title="Debes este mes" :value="money(monthTotals.pendiente)" color="red" />

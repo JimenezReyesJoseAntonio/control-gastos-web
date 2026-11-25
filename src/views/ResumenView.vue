@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch, nextTick } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -47,7 +47,16 @@ async function renderChart() {
   })
 }
 watch([tab, year], () => { if (tab.value === 'ano') renderChart() })
-onMounted(async () => { await compras.cargarCompras(); renderChart() })
+function resizeChart() { chart?.resize() }
+onMounted(async () => {
+  await compras.cargarCompras()
+  renderChart()
+  window.addEventListener('resize', resizeChart)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resizeChart)
+  chart?.dispose()
+})
 function exportCsv() {
   const rows = [['Mes', 'Compra', 'Monto', 'Estado'], ...monthPayments.value.map((p) => [p.mes, p.compras?.que_compre || 'Compra', p.monto, p.pagado ? 'Pagado' : 'Pendiente'])]
   const blob = new Blob([rows.map((row) => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
@@ -60,7 +69,7 @@ function exportCsv() {
     <h1 class="mb-5 text-2xl font-bold">Resumen</h1>
     <div class="mb-5 inline-flex rounded-xl bg-white p-1 shadow-sm"><button @click="tab='mes'" class="rounded-lg px-4 py-2" :class="tab==='mes'?'bg-violet-600 text-white':''">Por mes</button><button @click="tab='ano'" class="rounded-lg px-4 py-2" :class="tab==='ano'?'bg-violet-600 text-white':''">Por año</button></div>
     <section v-if="tab==='mes'">
-      <div class="mb-4 flex justify-between"><input v-model="month" type="month" class="rounded-xl border border-slate-200 bg-white px-4 py-3" /><button @click="exportCsv" class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">Exportar CSV</button></div>
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:justify-between"><input v-model="month" type="month" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 sm:w-auto" /><button @click="exportCsv" class="min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">Exportar CSV</button></div>
       <div class="grid gap-3 sm:grid-cols-3"><ResumenCard title="Total pagado" :value="money(monthTotals.pagado)" color="green" /><ResumenCard title="Total pendiente" :value="money(monthTotals.pendiente)" color="red" /><ResumenCard title="Total a pagar" :value="money(monthTotals.pagado + monthTotals.pendiente)" /></div>
       <div class="mt-5 divide-y rounded-2xl bg-white px-4 shadow-sm"><p v-if="!monthPayments.length" class="py-8 text-center text-slate-500">No hay pagos para este mes.</p><div v-for="pago in monthPayments" :key="pago.id" class="flex items-center py-4"><div class="flex-1"><p class="font-semibold">{{ pago.compras?.que_compre || 'Compra' }}</p><p class="text-sm text-slate-500">{{ pago.compras?.tarjetas?.nombre || 'Sin tarjeta' }}</p></div><b>{{ money(pago.monto) }}</b><span class="ml-4 rounded-full px-2 py-1 text-xs" :class="pago.pagado?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-600'">{{ pago.pagado?'Pagado':'Pendiente' }}</span></div></div>
     </section>

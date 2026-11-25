@@ -21,7 +21,7 @@ async function remove(id) {
   <div class="min-h-screen bg-slate-50">
     <AppHeader />
     <main class="mx-auto max-w-6xl px-4 py-7">
-      <div class="mb-5 flex items-center justify-between"><h1 class="text-2xl font-bold">Mis compras</h1><RouterLink to="/compras/nueva" class="rounded-xl bg-violet-600 px-4 py-3 font-bold text-white">+ Nueva compra</RouterLink></div>
+      <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h1 class="text-2xl font-bold">Mis compras</h1><RouterLink to="/compras/nueva" class="min-h-11 rounded-xl bg-violet-600 px-4 py-3 text-center font-bold text-white">+ Nueva compra</RouterLink></div>
       <div class="mb-5 flex flex-col gap-3 sm:flex-row">
         <input v-model="search" placeholder="Buscar compra..." class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3" />
         <select v-model="filter" class="rounded-xl border border-slate-200 bg-white px-4 py-3"><option value="todas">Todas</option><option value="activas">Activas</option><option value="liquidadas">Liquidadas</option></select>

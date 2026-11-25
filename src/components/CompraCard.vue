@@ -16,7 +16,7 @@ const end = computed(() => props.compra.mes_fin ? format(new Date(`${props.compr
 <template>
   <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
     <div class="flex items-start justify-between gap-4">
-      <div>
+      <div class="min-w-0">
         <h3 class="font-bold text-slate-900">{{ compra.que_compre }}</h3>
         <p class="text-sm text-slate-500">{{ compra.tienda || 'Sin tienda' }} · {{ compra.tarjetas?.nombre || 'Sin tarjeta' }}</p>
       </div>

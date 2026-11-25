@@ -9,5 +9,11 @@
 }
 
 body { margin: 0; min-width: 320px; min-height: 100vh; }
+html, body, #app { max-width: 100%; overflow-x: hidden; }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
+input, select, textarea { max-width: 100%; }
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  button, input, select, textarea { min-height: 44px; }
+}
